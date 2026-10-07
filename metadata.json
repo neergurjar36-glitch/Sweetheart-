@@ -1,0 +1,6 @@
+{
+  "name": "Sweetheart",
+  "description": "Private two-person communication app where the last Snap sent by your partner is the heart of the app.",
+  "requestFramePermissions": ["camera", "microphone"],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

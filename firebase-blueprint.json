@@ -1,0 +1,130 @@
+{
+  "entities": {
+    "User": {
+      "title": "User",
+      "description": "User profile for private two-person communication",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128 },
+        "displayName": { "type": "string", "maxLength": 80 },
+        "email": { "type": "string", "maxLength": 128 },
+        "photoUrl": { "type": "string", "maxLength": 2048 },
+        "connectionId": { "type": "string", "maxLength": 128 },
+        "createdAt": { "type": "string", "maxLength": 64 },
+        "lastSeen": { "type": "string", "maxLength": 64 },
+        "isOnline": { "type": "boolean" },
+        "partnerId": { "type": "string", "maxLength": 128 }
+      },
+      "required": ["id", "displayName", "email"]
+    },
+    "Connection": {
+      "title": "Connection",
+      "description": "Two-person private connection container",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128 },
+        "code": { "type": "string", "maxLength": 32 },
+        "user1Id": { "type": "string", "maxLength": 128 },
+        "user2Id": { "type": "string", "maxLength": 128 },
+        "status": { "type": "string", "enum": ["waiting", "connected", "disconnected"] },
+        "createdAt": { "type": "string", "maxLength": 64 },
+        "connectedAt": { "type": "string", "maxLength": 64 }
+      },
+      "required": ["id", "code", "user1Id", "status", "createdAt"]
+    },
+    "Message": {
+      "title": "Message",
+      "description": "Direct message between the two connected partners",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128 },
+        "connectionId": { "type": "string", "maxLength": 128 },
+        "senderId": { "type": "string", "maxLength": 128 },
+        "receiverId": { "type": "string", "maxLength": 128 },
+        "text": { "type": "string", "maxLength": 2000 },
+        "createdAt": { "type": "string", "maxLength": 64 },
+        "status": { "type": "string", "enum": ["sent", "delivered", "seen"] },
+        "seenAt": { "type": "string", "maxLength": 64 }
+      },
+      "required": ["id", "connectionId", "senderId", "receiverId", "text", "createdAt", "status"]
+    },
+    "Snap": {
+      "title": "Snap",
+      "description": "Photo Snap sent from one sweetheart to the other",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128 },
+        "connectionId": { "type": "string", "maxLength": 128 },
+        "senderId": { "type": "string", "maxLength": 128 },
+        "receiverId": { "type": "string", "maxLength": 128 },
+        "imageUrl": { "type": "string", "maxLength": 1000000 },
+        "caption": { "type": "string", "maxLength": 280 },
+        "createdAt": { "type": "string", "maxLength": 64 },
+        "status": { "type": "string", "enum": ["sent", "delivered", "seen"] },
+        "seenAt": { "type": "string", "maxLength": 64 }
+      },
+      "required": ["id", "connectionId", "senderId", "receiverId", "imageUrl", "createdAt", "status"]
+    },
+    "LastSnap": {
+      "title": "LastSnap",
+      "description": "The emotional centerpiece of the app - the latest snap received in the connection",
+      "type": "object",
+      "properties": {
+        "connectionId": { "type": "string", "maxLength": 128 },
+        "snapId": { "type": "string", "maxLength": 128 },
+        "senderId": { "type": "string", "maxLength": 128 },
+        "receiverId": { "type": "string", "maxLength": 128 },
+        "imageUrl": { "type": "string", "maxLength": 1000000 },
+        "caption": { "type": "string", "maxLength": 280 },
+        "createdAt": { "type": "string", "maxLength": 64 },
+        "seenAt": { "type": "string", "maxLength": 64 }
+      },
+      "required": ["connectionId", "snapId", "senderId", "receiverId", "imageUrl", "createdAt"]
+    },
+    "Call": {
+      "title": "Call",
+      "description": "One-to-one WebRTC signaling session between the two connected partners",
+      "type": "object",
+      "properties": {
+        "connectionId": { "type": "string", "maxLength": 128 },
+        "callerId": { "type": "string", "maxLength": 128 },
+        "receiverId": { "type": "string", "maxLength": 128 },
+        "callerName": { "type": "string", "maxLength": 80 },
+        "callerPhoto": { "type": "string", "maxLength": 2048 },
+        "status": { "type": "string", "enum": ["idle", "calling", "connected", "ended", "declined"] },
+        "offer": { "type": "string", "maxLength": 100000 },
+        "answer": { "type": "string", "maxLength": 100000 },
+        "callerCandidates": { "type": "string", "maxLength": 100000 },
+        "receiverCandidates": { "type": "string", "maxLength": 100000 },
+        "updatedAt": { "type": "string", "maxLength": 64 }
+      },
+      "required": ["connectionId", "callerId", "receiverId", "status", "updatedAt"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": { "$ref": "User" },
+      "description": "User profiles, accessible by the user and their connected partner"
+    },
+    "/connections/{connectionId}": {
+      "schema": { "$ref": "Connection" },
+      "description": "Unique connection doc matching exactly two users"
+    },
+    "/messages/{messageId}": {
+      "schema": { "$ref": "Message" },
+      "description": "Encrypted/private messages between the two users"
+    },
+    "/snaps/{snapId}": {
+      "schema": { "$ref": "Snap" },
+      "description": "Snaps shared between the two users"
+    },
+    "/lastSnaps/{connectionId}": {
+      "schema": { "$ref": "LastSnap" },
+      "description": "The current featured Last Snap for the connection"
+    },
+    "/calls/{connectionId}": {
+      "schema": { "$ref": "Call" },
+      "description": "Real-time 1-on-1 video call signaling doc"
+    }
+  }
+}

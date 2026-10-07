@@ -1,0 +1,76 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Default-deny catch-all
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    // Users collection: signed in users can view partner profiles, but only edit their own
+    match /users/{userId} {
+      allow get, list: if isSignedIn();
+      allow create, update, delete: if isSignedIn() && request.auth.uid == userId;
+    }
+
+    // Connections collection: allows partner discovery by code and two-person mutual updates
+    match /connections/{connectionId} {
+      allow get, list: if isSignedIn();
+      allow create: if isSignedIn() && request.resource.data.user1Id == request.auth.uid;
+      allow update: if isSignedIn() && (
+        resource.data.user1Id == request.auth.uid ||
+        resource.data.user2Id == request.auth.uid ||
+        (resource.data.status == 'waiting' && request.resource.data.user2Id == request.auth.uid)
+      );
+      allow delete: if isSignedIn() && (
+        resource.data.user1Id == request.auth.uid ||
+        resource.data.user2Id == request.auth.uid
+      );
+    }
+
+    // Messages collection: private to the two connected users
+    match /messages/{messageId} {
+      allow read: if isSignedIn() && (
+        resource.data.senderId == request.auth.uid ||
+        resource.data.receiverId == request.auth.uid
+      );
+      allow create: if isSignedIn() && request.resource.data.senderId == request.auth.uid;
+      allow update: if isSignedIn() && (
+        resource.data.senderId == request.auth.uid ||
+        resource.data.receiverId == request.auth.uid
+      );
+      allow delete: if isSignedIn() && resource.data.senderId == request.auth.uid;
+    }
+
+    // Snaps collection: private to the connected couple
+    match /snaps/{snapId} {
+      allow read, write: if isSignedIn();
+    }
+
+    // Last Snap collection: the emotional centerpiece for the connected couple
+    match /lastSnaps/{connectionId} {
+      allow read, write: if isSignedIn();
+    }
+
+    // Calls collection: WebRTC signaling for one-to-one video calls
+    match /calls/{connectionId} {
+      allow read: if isSignedIn();
+      allow create: if isSignedIn() && request.resource.data.callerId == request.auth.uid;
+      allow update: if isSignedIn() && (
+        resource.data.callerId == request.auth.uid ||
+        resource.data.receiverId == request.auth.uid
+      );
+      allow delete: if isSignedIn() && (
+        resource.data.callerId == request.auth.uid ||
+        resource.data.receiverId == request.auth.uid
+      );
+    }
+  }
+}
